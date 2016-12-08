@@ -2,7 +2,7 @@ import arcpy, os
 Workspace = r"Y:\Hold\pytest"
 arcpy.env.workspace = Workspace
 mxdList = arcpy.ListFiles("*.mxd")
-newServer = "Frogmouth-T"
+newServer = "NEWSERVER"
 print "Map Documents in %r: %r" % (Workspace, mxdList)
 for file in mxdList:
     filePath = os.path.join(Workspace, file)
@@ -10,7 +10,7 @@ for file in mxdList:
     print "In %r" % file
     for lyr in arcpy.mapping.ListLayers(mxd):
         if lyr.supports("SERVICEPROPERTIES"):
-            if lyr.serviceProperties['Server'] == u'vulture':
+            if lyr.serviceProperties['Server'] == u'OLDSERVER':
                 # print "%r is being updated." %lyr.serviceProperties['Server']
                 if lyr.serviceProperties['ServiceType'] == u'SDE':
                     serverName = lyr.serviceProperties[u'Server']
