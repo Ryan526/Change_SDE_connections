@@ -1,8 +1,27 @@
 import arcpy, os
 Workspace = r"Y:\Hold\pytest"
 arcpy.env.workspace = Workspace
+paths = []
 mxdList = arcpy.ListFiles("*.mxd")
 newServer = "NEWSERVER"
+databases = ['list', 'of', 'SQL', 'database', 'names']
+
+for file in mxdList:
+	for lyr in arcpy.mapping.ListLayers(mxd):
+		if lyr.supports("SERVICEPROPERTIES"):
+            if lyr.serviceProperties['Server'] == u'OLDSERVER':
+                if lyr.serviceProperties['ServiceType'] == u'SDE':
+                    databaseName = lyr.serviceProperties[u'Database']
+                    if not databaseName.endswith('.sde'):
+                        databaseName += '.sde'
+                    sdeConnectionPath = os.path.dirname(lyr.workspacePath)
+                    serverDatabase = os.path.join(newServer+databaseName)
+                    paths.append(sdeConnectionPath)
+sdeConnectionPath = paths[0]
+
+for database in databases:
+    arcpy.CreateDatabaseConnection_management (sdeConnectionPath, sdeConnectionPath, "SQL_SERVER", newServer, "OPERATING_SYSTEM_AUTH", database, "DEFAULT")
+
 print "Map Documents in %r: %r" % (Workspace, mxdList)
 for file in mxdList:
     filePath = os.path.join(Workspace, file)
