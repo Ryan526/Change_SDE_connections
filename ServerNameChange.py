@@ -1,56 +1,58 @@
-import arcpy, os
-Workspace = r"Y:\Hold\pytest"
-arcpy.env.workspace = Workspace
-paths = []
-mxdList = arcpy.ListFiles("*.mxd")
+import arcpy, os, getpass
 newServer = "NEWSERVER"
-databases = ['list', 'of', 'SQL', 'database', 'names']
+user = getpass.getuser()
+#user_dir = os.path.join(u'C:\\Users\\', user) ### used for local machine
+user_dir = u'Y:\\Networked_Directories\\'
+os.chdir(user_dir)
+################create logfile################
+logfile = open("logfile_for_vulture_upgrade_Lambert1.txt", "w")  ## please add the directory name that you are testing (Projects, Hold, etc.)
 
+print>>logfile, "User's home directory: %r" % user_dir
+
+################create mxdList################
+mxdList = []
+for dirpath,_,filenames in os.walk(user_dir):  ##would love to know what this means
+    for name in filenames:
+        if name.endswith('.mxd'):
+            mapdoc= os.path.join(dirpath, name)
+            mxdList.append(mapdoc)
+print>>logfile, "----------------MXD List:----------------"
+for mapdoc in mxdList:
+	print>>, logfile, mapdoc
+
+################Searching through .mxd documents for SDE connections################
 for file in mxdList:
+	print>>logfile, "----------------Searching for SDE connections in: %r----------------" % file
+	filePath = os.path.join(user_dir, file)
+    mxd = arcpy.mapping.MapDocument(filePat
 	for lyr in arcpy.mapping.ListLayers(mxd):
-		if lyr.supports("SERVICEPROPERTIES"):
-            if lyr.serviceProperties['Server'] == u'OLDSERVER':
-                if lyr.serviceProperties['ServiceType'] == u'SDE':
-                    databaseName = lyr.serviceProperties[u'Database']
-                    if not databaseName.endswith('.sde'):
-                        databaseName += '.sde'
-                    sdeConnectionPath = os.path.dirname(lyr.workspacePath)
-                    serverDatabase = os.path.join(newServer+databaseName)
-                    paths.append(sdeConnectionPath)
-sdeConnectionPath = paths[0]
-
-for database in databases:
-    arcpy.CreateDatabaseConnection_management (sdeConnectionPath, sdeConnectionPath, "SQL_SERVER", newServer, "OPERATING_SYSTEM_AUTH", database, "DEFAULT")
-
-print "Map Documents in %r: %r" % (Workspace, mxdList)
-for file in mxdList:
-    filePath = os.path.join(Workspace, file)
-    mxd = arcpy.mapping.MapDocument(filePath)
-    print "In %r" % file
-    for lyr in arcpy.mapping.ListLayers(mxd):
-        if lyr.supports("SERVICEPROPERTIES"):
-            if lyr.serviceProperties['Server'] == u'OLDSERVER':
-                # print "%r is being updated." %lyr.serviceProperties['Server']
-                if lyr.serviceProperties['ServiceType'] == u'SDE':
-                    serverName = lyr.serviceProperties[u'Server']
-                    databaseName = lyr.serviceProperties[u'Database']
-                    if not databaseName.endswith('.sde'):
-                        databaseName += '.sde'
-                    print "Updating: %r, %r:" %(lyr.serviceProperties['Server'], lyr.serviceProperties['Database'])
-                    print "%r has been updated successfully" % lyr.datasetName
-                    layerName = lyr.datasetName
-                    print layerName
-                    
-                    print "Service Type: %r" % lyr.serviceProperties['ServiceType']
-                    find = lyr.workspacePath
-                    print "Current path: %r" % find
-                    print "old server %r:" % serverName
-                    ##                    # INSERT for statement: for each current databaseName print the layers being used
-                    replacePath = os.path.join(os.path.dirname(find),os.path.os.path.basename(newServer)+databaseName)
-                    print "New Path: %r" % replacePath
-                    mxd.replaceWorkspaces(find,"SDE_WORKSPACE",replacePath,"SDE_WORKSPACE",False)
-                    
-                    
-                    
-    #arcpy.RefreshTOC()
-    mxd.save()
+		try:
+			if lyr.supports("dataSource"):
+				try:
+					if lyr.supports("SERVICEPROPERTIES") and lyr.serviceProperties['ServiceType'] == u'SDE' and lyr.serviceProperties['Server'] == u'vulture':
+						try:
+							serverName = lyr.serviceProperties[u'Server']
+                            databaseName = lyr.serviceProperties[u'Database']
+                            if not databaseName.endswith('.sde'):
+                                databaseName += '.sde'
+                            layerName = lyr.datasetName
+                            print>>logfile, "Layer name: %r" % layerName
+                            print>>logfile, "Updating: %r, %r:" %(lyr.serviceProperties['Server'], lyr.serviceProperties['Database'])
+                            if lyr.supports("workspacePath"):
+								find = lyr.workspacePath  ## herein lies the problem, some lyr.workspacePath do not exist
+                                print>>logfile, "Current path: %r" % find
+                                replacePath = os.path.join("Y:\\AppData\\Roaming\\ESRI\\Desktop10.4\\ArcCatalog\\",os.path.os.path.basename(newServer)+"_"+databaseName)
+                                print>>logfile, "New Path: %r" % replacePath
+                                mxd.replaceWorkspaces(find,"SDE_WORKSPACE",replacePath,"SDE_WORKSPACE",False)
+                                print>>logfile, "****************%r has been updated successfully****************" % lyr.datasetName
+							else:
+								print>>logfile, "!!!!!!!!Connection path not vaild, layer not updated!!!!!!!!"
+						except:
+							print>>logfile, "Error: Find path not valid, not default user."
+				except:
+					print>>logfile, "Unknown error occurred (level 1)."
+		except:
+			print>>logfile, "Unknown error occurred (level 2)."
+	#mxd.save() ##testing without, also need to save as older version (10.2) for some users.
+logfile.close()
+print "Completed."
