@@ -9,7 +9,7 @@ This script was composed to find the existing .MXD files that use existing "OLDS
 LIMITATIONS: This script works for OSA and when the DEFAULT user added the original .SDE data to the map.
 
 NEEDS: 
-Create connections using arcpy.CreateArcSDEConnectionFile_management up front to ensure new connections will be uniform
+Create connections using arcpy.CreateArcSDEConnectionFile_management up front to ensure new connections will be uniform and that connections can be accessed. I got around this by creating connection files on a networked drive and mapped all new connections to those.
 Add else statements for files with no .SDE connections
 Add else statements for errors
-list connections that were not changed
+List connections that were not changed
