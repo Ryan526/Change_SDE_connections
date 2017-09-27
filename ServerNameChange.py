@@ -5,7 +5,9 @@ user = getpass.getuser()
 user_dir = u'Input path to directory here'
 os.chdir(user_dir)
 ################create logfile################
-logfile = open("logfile_for_server_upgrade.txt", "w")  ## We did this in batches due to limitations (see readme) and so appended filename with starting directory name (Projects, Department, etc.)
+logfile = open("logfile_for_server_upgrade.txt", "w")  
+## We did this in batches due to limitations (see readme) and so appended filename with starting directory name 
+## (Projects, Department, etc.)
 
 print>>logfile, "User's home directory: %r" % user_dir
 
